@@ -1,0 +1,1187 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AIマネタイズ 適性診断</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Poppins:wght@700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f5f7ff;--white:#fff;--navy:#1a1f4e;--navy2:#2d3470;
+  --blue:#3b5bdb;--blue-l:#eef2ff;--blue-m:#748ffc;
+  --green:#2f9e44;--green-l:#ebfbee;
+  --orange:#e8590c;--orange-l:#fff4e6;
+  --pink:#c2255c;--pink-l:#fff0f6;
+  --teal:#0c8599;--teal-l:#e3fafc;
+  --yellow:#e67700;--yellow-l:#fff9db;
+  --purple:#6741d9;--purple-l:#f3f0ff;
+  --red:#c92a2a;
+  --gold:#f59f00;--gold-l:#fff3cd;
+  --indigo:#364fc7;--indigo-l:#e8ecff;
+  --text:#1a1f4e;--text2:#495057;--text3:#868e96;
+  --border:#dee2e6;
+  --sh:0 2px 12px rgba(26,31,78,.08);
+  --sh2:0 8px 32px rgba(26,31,78,.14);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.6}
+#app{max-width:720px;margin:0 auto;padding:28px 16px 100px}
+
+/* ── Header ── */
+.site-header{text-align:center;margin-bottom:36px}
+.site-logo{display:inline-flex;align-items:center;gap:8px;background:var(--navy);color:#fff;font-size:12px;font-weight:700;letter-spacing:.1em;padding:5px 16px;border-radius:100px;margin-bottom:18px}
+.site-title{font-family:'Poppins','Noto Sans JP',sans-serif;font-size:clamp(20px,5vw,30px);font-weight:800;color:var(--navy);line-height:1.25;margin-bottom:10px}
+.site-title em{color:var(--blue);font-style:normal}
+.site-sub{font-size:13px;color:var(--text2);max-width:480px;margin:0 auto;line-height:1.8}
+
+/* ── Phase indicator ── */
+.phase-bar{display:flex;gap:0;margin-bottom:28px;border-radius:14px;overflow:hidden;border:1.5px solid var(--border)}
+.phase-step{flex:1;padding:12px 8px;text-align:center;font-size:11px;font-weight:700;color:var(--text3);background:var(--white);transition:all .3s;border-right:1px solid var(--border);cursor:default}
+.phase-step:last-child{border-right:none}
+.phase-step .ps-num{width:22px;height:22px;border-radius:50%;background:var(--border);color:var(--text3);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;margin:0 auto 4px}
+.phase-step.active{background:var(--blue-l);color:var(--navy)}
+.phase-step.active .ps-num{background:var(--blue);color:#fff}
+.phase-step.done{background:#f8f9ff;color:var(--text2)}
+.phase-step.done .ps-num{background:var(--green);color:#fff}
+
+/* ── Cards ── */
+.card{background:var(--white);border-radius:20px;padding:28px;box-shadow:var(--sh);margin-bottom:16px}
+
+/* ── Intro ── */
+.intro-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:20px 0 24px}
+@media(max-width:480px){.intro-grid{grid-template-columns:1fr}}
+.intro-box{background:var(--blue-l);border-radius:14px;padding:16px 12px;text-align:center}
+.intro-box .ico{font-size:24px;margin-bottom:6px}
+.intro-box h4{font-size:12px;font-weight:700;color:var(--navy);margin-bottom:3px}
+.intro-box p{font-size:11px;color:var(--text2);line-height:1.5}
+.notice{background:var(--yellow-l);border:1.5px solid #ffd43b;border-radius:12px;padding:12px 16px;display:flex;gap:10px;align-items:flex-start;margin-bottom:22px;font-size:13px;color:var(--text2);line-height:1.7}
+
+/* ── Progress ── */
+.progress-wrap{margin-bottom:24px}
+.progress-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.progress-label{font-size:13px;font-weight:700;color:var(--navy)}
+.progress-pct{font-size:13px;color:var(--blue);font-weight:700}
+.progress-track{height:8px;background:var(--border);border-radius:100px;overflow:hidden}
+.progress-fill{height:100%;border-radius:100px;transition:width .45s cubic-bezier(.4,0,.2,1)}
+.pf-cw{background:linear-gradient(90deg,var(--blue),var(--blue-m))}
+.pf-stock{background:linear-gradient(90deg,var(--green),#51cf66)}
+.step-dots{display:flex;gap:4px;margin-top:7px;flex-wrap:wrap}
+.step-dot{width:7px;height:7px;border-radius:50%;background:var(--border);transition:all .2s}
+.step-dot.done{background:var(--blue)}
+.step-dot.current{background:var(--blue-m);transform:scale(1.3)}
+.step-dot.done-stock{background:var(--green)}
+.step-dot.current-stock{background:#51cf66;transform:scale(1.3)}
+
+/* ── Question ── */
+.q-card{background:var(--white);border-radius:20px;padding:28px;box-shadow:var(--sh);margin-bottom:14px;animation:popIn .35s cubic-bezier(.4,0,.2,1)}
+@keyframes popIn{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}
+.q-badge{display:inline-block;color:#fff;font-size:11px;font-weight:700;letter-spacing:.1em;padding:3px 12px;border-radius:100px;margin-bottom:12px}
+.q-badge-cw{background:var(--blue)}
+.q-badge-stock{background:var(--green)}
+.q-section-label{font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.08em;margin-bottom:4px}
+.q-text{font-size:17px;font-weight:700;color:var(--navy);margin-bottom:6px;line-height:1.55}
+.q-hint{font-size:12px;color:var(--text3);margin-bottom:20px}
+.options{display:flex;flex-direction:column;gap:9px}
+.opt{display:flex;align-items:center;gap:12px;background:var(--bg);border:2px solid var(--border);border-radius:13px;padding:13px 16px;cursor:pointer;transition:all .18s;text-align:left;color:var(--text);font-family:'Noto Sans JP',sans-serif;font-size:13px;font-weight:500;line-height:1.55;width:100%}
+.opt:hover{border-color:var(--blue-m);background:var(--blue-l);transform:translateX(3px)}
+.opt.sel{border-color:var(--blue);background:var(--blue-l);color:var(--navy)}
+.opt.sel-stock{border-color:var(--green);background:var(--green-l);color:var(--navy)}
+.opt-letter{width:28px;height:28px;border-radius:50%;background:var(--white);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--text3);flex-shrink:0;transition:all .18s}
+.opt.sel .opt-letter{background:var(--blue);border-color:var(--blue);color:#fff}
+.opt.sel-stock .opt-letter{background:var(--green);border-color:var(--green);color:#fff}
+.nav-row{display:flex;gap:10px;justify-content:space-between;align-items:center;margin-top:4px}
+.btn-back{background:var(--white);border:2px solid var(--border);color:var(--text2);border-radius:12px;padding:11px 20px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Noto Sans JP',sans-serif;transition:all .18s}
+.btn-back:hover{border-color:var(--text2)}
+.btn-next{flex:1;border:none;color:#fff;border-radius:12px;padding:14px 24px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Noto Sans JP',sans-serif;transition:all .18s;opacity:.3;pointer-events:none}
+.btn-next-cw{background:var(--blue)}
+.btn-next-stock{background:var(--green)}
+.btn-next.on{opacity:1;pointer-events:all}
+.btn-next.on:hover{transform:translateY(-2px)}
+
+/* ── Transition screen ── */
+.trans-screen{text-align:center;padding:48px 24px;background:var(--white);border-radius:20px;box-shadow:var(--sh);animation:popIn .4s ease}
+.trans-icon{font-size:56px;margin-bottom:20px}
+.trans-h{font-size:22px;font-weight:800;color:var(--navy);margin-bottom:12px}
+.trans-p{font-size:14px;color:var(--text2);line-height:1.9;margin-bottom:28px}
+.trans-badge{display:inline-block;padding:8px 20px;border-radius:100px;font-size:13px;font-weight:700;margin-bottom:8px}
+
+/* ── Loading ── */
+.loading-screen{text-align:center;padding:56px 20px;background:var(--white);border-radius:20px;box-shadow:var(--sh);animation:popIn .4s ease}
+.loader{display:inline-block;width:52px;height:52px;border:5px solid var(--blue-l);border-top-color:var(--blue);border-radius:50%;animation:spin .9s linear infinite;margin-bottom:20px}
+.loader-stock{border-color:var(--green-l);border-top-color:var(--green)}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── Result ── */
+.result-screen{animation:popIn .4s ease}
+
+/* Hero 2-col */
+.result-hero-wrap{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+@media(max-width:520px){.result-hero-wrap{grid-template-columns:1fr}}
+.result-hero{border-radius:18px;padding:24px 20px;position:relative;overflow:hidden}
+.rh-cw{background:linear-gradient(135deg,var(--navy),var(--navy2))}
+.rh-stock{background:linear-gradient(135deg,#1b5e20,var(--green))}
+.rh-label{font-size:10px;font-weight:700;letter-spacing:.12em;color:rgba(255,255,255,.65);margin-bottom:8px}
+.rh-type{font-size:17px;font-weight:800;color:#fff;margin-bottom:6px;line-height:1.3}
+.rh-genre{font-size:13px;color:rgba(255,255,255,.85);line-height:1.7}
+.rh-deco{position:absolute;right:-20px;top:-20px;width:100px;height:100px;border-radius:50%;background:rgba(255,255,255,.07);pointer-events:none}
+
+/* Score bars */
+.score-section{margin-bottom:20px}
+.score-section-title{font-size:12px;font-weight:700;letter-spacing:.08em;color:var(--text3);margin-bottom:14px;display:flex;align-items:center;gap:6px}
+.score-item{margin-bottom:13px}
+.score-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+.score-label{font-size:13px;font-weight:700;color:var(--navy)}
+.score-pct{font-size:12px;font-weight:700}
+.score-track{height:9px;background:var(--bg);border-radius:100px;overflow:hidden;border:1px solid var(--border)}
+.score-fill{height:100%;border-radius:100px;transition:width 1.1s cubic-bezier(.4,0,.2,1)}
+
+/* CW score colors */
+.cw1 .score-fill{background:#3b5bdb} .cw1 .score-pct{color:#3b5bdb}
+.cw2 .score-fill{background:#0c8599} .cw2 .score-pct{color:#0c8599}
+.cw3 .score-fill{background:#c2255c} .cw3 .score-pct{color:#c2255c}
+.cw4 .score-fill{background:#e8590c} .cw4 .score-pct{color:#e8590c}
+.cw5 .score-fill{background:#6741d9} .cw5 .score-pct{color:#6741d9}
+.cw6 .score-fill{background:#f59f00} .cw6 .score-pct{color:#f59f00}
+.cw7 .score-fill{background:#364fc7} .cw7 .score-pct{color:#364fc7}
+.cw8 .score-fill{background:#087f5b} .cw8 .score-pct{color:#087f5b}
+.cw9 .score-fill{background:#862e9c} .cw9 .score-pct{color:#862e9c}
+/* Stock score colors */
+.st1 .score-fill{background:#e67700} .st1 .score-pct{color:#e67700}
+.st2 .score-fill{background:#0c8599} .st2 .score-pct{color:#0c8599}
+.st3 .score-fill{background:#2f9e44} .st3 .score-pct{color:#2f9e44}
+.st4 .score-fill{background:#c92a2a} .st4 .score-pct{color:#c92a2a}
+.st5 .score-fill{background:#c2255c} .st5 .score-pct{color:#c2255c}
+.st6 .score-fill{background:#6741d9} .st6 .score-pct{color:#6741d9}
+.st7 .score-fill{background:#e67700} .st7 .score-pct{color:#e67700}
+
+/* Genre card */
+.genre-card{border-radius:14px;padding:18px;border:2px solid;margin-bottom:10px}
+.tg-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.tg-icon{font-size:26px}
+.tg-name{font-size:15px;font-weight:700;color:var(--navy)}
+.tg-rank{font-size:10px;font-weight:700;color:#fff;background:var(--navy);padding:2px 8px;border-radius:100px}
+.tg-desc{font-size:13px;color:var(--text2);line-height:1.75;margin-bottom:10px}
+.tg-jobs{display:flex;flex-direction:column;gap:5px}
+.tg-job{background:rgba(255,255,255,.65);border-radius:7px;padding:8px 11px;font-size:12px;color:var(--text2);display:flex;gap:7px}
+.tg-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px}
+.tg-tag{font-size:11px;font-weight:700;padding:2px 9px;border-radius:100px;background:var(--white);color:var(--text2);border:1px solid var(--border)}
+
+/* Schedule */
+.schedule-grid{display:flex;flex-direction:column;gap:0}
+.sch-row{display:flex;gap:0;position:relative}
+.sch-row:not(:last-child)::before{content:'';position:absolute;left:17px;top:38px;bottom:-2px;width:2px;background:var(--border)}
+.sch-dot{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0;margin-right:14px;margin-top:2px;z-index:1}
+.sch-body{flex:1;padding-bottom:20px}
+.sch-period{font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--text3);text-transform:uppercase;margin-bottom:4px}
+.sch-title{font-size:14px;font-weight:700;color:var(--navy);margin-bottom:6px}
+.sch-tasks{display:flex;flex-direction:column;gap:5px}
+.sch-task{background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px 12px;font-size:12px;color:var(--text2);line-height:1.6}
+
+/* Checklist */
+.cl-item{display:flex;align-items:flex-start;gap:11px;padding:12px 14px;background:var(--bg);border:2px solid var(--border);border-radius:11px;cursor:pointer;transition:all .18s;user-select:none;margin-bottom:8px}
+.cl-item.done{background:var(--green-l);border-color:#69db7c}
+.cl-checkbox{width:20px;height:20px;border-radius:5px;border:2px solid var(--border);flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;transition:all .18s;background:var(--white)}
+.cl-item.done .cl-checkbox{background:var(--green);border-color:var(--green);color:#fff}
+.cl-text{font-size:12px;color:var(--text2);line-height:1.65}
+.cl-progress-row{display:flex;justify-content:space-between;font-size:12px;color:var(--text3);margin-bottom:6px}
+.cl-progress-row span{font-weight:700;color:var(--green)}
+.cl-track{height:5px;background:var(--border);border-radius:100px;overflow:hidden;margin-bottom:14px}
+.cl-fill{height:100%;background:linear-gradient(90deg,var(--green),#51cf66);border-radius:100px;transition:width .4s ease}
+
+/* AI advice */
+.ai-box{background:var(--blue-l);border:2px solid #a5b4fc;border-radius:13px;padding:18px;font-size:13px;line-height:2;color:var(--text);min-height:60px}
+.ai-cursor{display:inline-block;width:2px;height:14px;background:var(--blue);margin-left:2px;vertical-align:middle;animation:blink 1s step-end infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+/* Tabs */
+.tabs{display:flex;gap:3px;margin-bottom:18px;background:var(--bg);padding:4px;border-radius:11px;border:1px solid var(--border)}
+.tab{flex:1;padding:9px 4px;font-size:12px;font-weight:700;border:none;background:none;border-radius:8px;cursor:pointer;color:var(--text3);font-family:'Noto Sans JP',sans-serif;transition:all .18s;text-align:center;line-height:1.4}
+.tab.active{background:var(--white);color:var(--navy);box-shadow:var(--sh)}
+
+/* Free input */
+.free-input-wrap{margin-top:10px;animation:popIn .25s ease}
+.free-input{width:100%;border:2px solid var(--blue-m);border-radius:10px;padding:12px 14px;font-size:13px;color:var(--text);font-family:'Noto Sans JP',sans-serif;resize:none;background:var(--white);outline:none;line-height:1.7;transition:border-color .18s}
+.free-input:focus{border-color:var(--blue)}
+.free-input-label{font-size:12px;font-weight:700;color:var(--blue);margin-bottom:6px}
+.career-card{background:var(--white);border-radius:20px;padding:28px;box-shadow:var(--sh);animation:popIn .35s ease}
+.career-tag{display:inline-flex;align-items:center;gap:5px;background:var(--blue-l);border:1px solid var(--blue-m);color:var(--navy);border-radius:100px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;transition:all .18s;margin:3px}
+.career-tag:hover{background:var(--blue);color:#fff}
+.career-tag.sel{background:var(--blue);color:#fff;border-color:var(--blue)}
+.career-detected{background:var(--green-l);border:1.5px solid #69db7c;border-radius:10px;padding:10px 14px;font-size:12px;color:var(--green);margin-top:10px;display:none}
+/* Encourage */
+.enc-box{background:linear-gradient(135deg,var(--navy),var(--navy2));border-radius:16px;padding:22px;color:#fff;margin-bottom:14px}
+.enc-item{background:rgba(255,255,255,.08);border-radius:9px;padding:12px 14px;margin-bottom:9px}
+.enc-q{font-size:12px;font-weight:700;color:#ffd43b;margin-bottom:5px}
+.enc-a{font-size:12px;color:rgba(255,255,255,.85);line-height:1.75}
+
+/* Buttons */
+.btn-primary{display:block;width:100%;background:var(--blue);color:#fff;border:none;border-radius:13px;padding:16px;font-size:16px;font-weight:700;font-family:'Noto Sans JP',sans-serif;cursor:pointer;transition:all .18s;box-shadow:0 4px 16px rgba(59,91,219,.25)}
+.btn-primary:hover{background:var(--navy2);transform:translateY(-2px)}
+.btn-primary-green{background:var(--green);box-shadow:0 4px 16px rgba(47,158,68,.25)}
+.btn-primary-green:hover{background:#1b7a2e}
+.btn-secondary{display:block;width:100%;background:var(--white);border:2px solid var(--border);color:var(--text2);border-radius:13px;padding:13px;font-size:13px;font-weight:700;font-family:'Noto Sans JP',sans-serif;cursor:pointer;transition:all .18s;text-align:center;margin-top:10px}
+.btn-secondary:hover{border-color:var(--blue);color:var(--blue)}
+.q-note{text-align:center;font-size:11px;color:var(--text3);margin-top:10px}
+.copy-btn{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:7px;padding:7px 14px;font-size:11px;font-weight:700;font-family:'Noto Sans JP',sans-serif;cursor:pointer;margin-top:12px;transition:all .18s}
+.copy-btn:hover{background:rgba(255,255,255,.2)}
+.copy-btn.copied{background:var(--green);border-color:var(--green)}
+.template-box{background:var(--navy);border-radius:13px;padding:18px}
+.template-text{font-size:12px;color:rgba(255,255,255,.88);line-height:2;white-space:pre-wrap}
+.template-text .ph{color:#ffd43b;font-weight:700}
+.price-row{display:flex;align-items:center;gap:12px;background:var(--bg);border:1px solid var(--border);border-radius:11px;padding:12px 14px;margin-bottom:8px}
+.price-phase{font-size:10px;font-weight:700;color:#fff;padding:3px 9px;border-radius:100px;flex-shrink:0;min-width:56px;text-align:center}
+.ph-first{background:var(--blue)} .ph-second{background:var(--green)} .ph-third{background:var(--orange)}
+.price-val{font-size:14px;font-weight:700;color:var(--navy);margin-bottom:1px}
+.price-note{font-size:11px;color:var(--text2)}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="site-header">
+    <div class="site-logo">🤖 AI MONETIZE LAB</div>
+    <div class="site-title"><em>AIマネタイズ</em><br>適性診断 2026</div>
+    <p class="site-sub">クライアントワーク × ストック型、あなたに合った<br>収入の作り方を診断で見つけましょう。</p>
+  </div>
+  <div id="main-content"></div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════
+// CW QUESTIONS (12問)
+// ════════════════════════════════════════════════════
+const CW_QS = [
+  {id:1,text:"今のあなたの状況に一番近いものは？",hint:"正直に選んでください",opts:[
+    {l:"会社員・学生で副業・フリーランスを始めたい",s:{wr:1,sns:1,de:1,img:1,sl:0,web:0,pc:0,en:0,co:0}},
+    {l:"退職・休職していて今すぐ収入が必要",s:{wr:2,sns:2,de:1,img:2,sl:0,web:1,pc:1,en:1,co:1}},
+    {l:"在宅・リモートで働きたい",s:{wr:2,sns:1,de:1,img:1,sl:1,web:1,pc:1,en:1,co:0}},
+    {l:"スキルアップしながら将来独立したい",s:{wr:1,sns:1,de:2,img:2,sl:2,web:2,pc:1,en:2,co:1}},
+  ]},
+  {id:2,text:"文章を書くことについてどう感じますか？",hint:"LINEやSNSなど日常の文章も含めて考えてください",opts:[
+    {l:"好きで、よく書く。読んでもらえると嬉しい",s:{wr:4,sns:2,de:0,img:0,sl:1,web:0,pc:0,en:0,co:2}},
+    {l:"得意ではないが練習すれば何とかなりそう",s:{wr:2,sns:1,de:0,img:0,sl:1,web:1,pc:0,en:0,co:1}},
+    {l:"苦手ではないが特に好きでもない",s:{wr:1,sns:1,de:0,img:0,sl:0,web:0,pc:1,en:1,co:1}},
+    {l:"あまり得意ではなく、できれば避けたい",s:{wr:0,sns:0,de:1,img:2,sl:0,web:1,pc:1,en:2,co:0}},
+  ]},
+  {id:3,text:"今、主にどのデバイスで作業できますか？",hint:"仕事に使えそうな環境を正直に選んでください",opts:[
+    {l:"スマホのみ（PCは持っていない・使えない）",s:{wr:2,sns:3,de:0,img:1,sl:0,web:0,pc:0,en:0,co:0}},
+    {l:"PCはあるがあまり使いこなせていない",s:{wr:2,sns:2,de:1,img:1,sl:0,web:0,pc:0,en:0,co:1}},
+    {l:"PCを普通に使える（Word・Excel・SNSは問題なし）",s:{wr:2,sns:2,de:2,img:2,sl:2,web:1,pc:2,en:0,co:1}},
+    {l:"PCが得意（デザインツール・コードも触れる）",s:{wr:1,sns:1,de:3,img:3,sl:2,web:3,pc:2,en:3,co:1}},
+  ]},
+  {id:4,text:"パソコンの操作レベルを教えてください",hint:"使えるツールで向いている案件が大きく変わります",opts:[
+    {l:"スマホのみで、スマホで完結する作業が希望",s:{wr:2,sns:4,de:0,img:1,sl:0,web:0,pc:0,en:0,co:0}},
+    {l:"ブラウザとWord/Excelくらいなら使える",s:{wr:3,sns:2,de:1,img:1,sl:2,web:0,pc:2,en:0,co:1}},
+    {l:"Canva・Googleドキュメント・スライドも使える",s:{wr:2,sns:2,de:3,img:2,sl:3,web:1,pc:1,en:0,co:1}},
+    {l:"プログラミングやHTML/CSSも触ったことがある",s:{wr:0,sns:0,de:1,img:2,sl:0,web:3,pc:1,en:4,co:1}},
+  ]},
+  {id:5,text:"「これについては人より詳しい」と思える分野はありますか？",hint:"趣味・仕事・経験、なんでもOK。「その他」を選んで具体的に書いてもらえると診断精度が上がります",opts:[
+    {l:"美容・ファッション・インテリア・料理などライフスタイル系",s:{wr:2,sns:3,de:2,img:2,sl:0,web:0,pc:0,en:0,co:0}},
+    {l:"IT・ガジェット・ゲーム・アニメなどデジタル系",s:{wr:2,sns:2,de:1,img:2,sl:0,web:2,pc:1,en:2,co:0}},
+    {l:"ビジネス・マーケティング・投資などビジネス系",s:{wr:1,sns:1,de:0,img:0,sl:2,web:1,pc:2,en:0,co:3}},
+    {l:"その他・得意分野なし（自由に書いてください）",s:{wr:1,sns:1,de:1,img:1,sl:1,web:1,pc:1,en:0,co:0},freeInput:true},
+  ]},
+  {id:6,text:"SNSについて今のあなたに近いものは？",hint:"Instagram・X・TikTok何でもOK",opts:[
+    {l:"自分のアカウントがあり、たまに投稿している",s:{wr:1,sns:3,de:2,img:2,sl:0,web:0,pc:0,en:0,co:1}},
+    {l:"見るのは好きだが自分ではあまり投稿しない",s:{wr:1,sns:2,de:1,img:1,sl:0,web:0,pc:0,en:0,co:0}},
+    {l:"SNSはあまり使っていない",s:{wr:1,sns:0,de:0,img:0,sl:1,web:1,pc:2,en:1,co:1}},
+    {l:"フォロワーがいて発信に慣れている",s:{wr:2,sns:4,de:2,img:2,sl:0,web:0,pc:0,en:0,co:2}},
+  ]},
+  {id:7,text:"クライアントとのやりとりについてどう感じますか？",hint:"初めてなので「わからない」は正直に選んでください",opts:[
+    {l:"コミュニケーションが得意で人と話すのが好き",s:{wr:1,sns:2,de:1,img:0,sl:1,web:1,pc:0,en:0,co:3}},
+    {l:"チャット・メール中心なら大丈夫",s:{wr:2,sns:2,de:2,img:2,sl:2,web:2,pc:2,en:2,co:1}},
+    {l:"できれば最小限にしたい（成果物で語りたい）",s:{wr:2,sns:0,de:2,img:3,sl:1,web:1,pc:1,en:2,co:0}},
+    {l:"よくわからないのでどちらでもいい",s:{wr:1,sns:1,de:1,img:1,sl:1,web:1,pc:1,en:1,co:1}},
+  ]},
+  {id:8,text:"デザイン・画像編集ツールの経験を教えてください",hint:"使えるツールで向いている案件が変わります",opts:[
+    {l:"Photoshop・Illustratorを使いこなせる",s:{wr:0,sns:1,de:4,img:4,sl:2,web:2,pc:0,en:0,co:0}},
+    {l:"Canvaやスマホアプリで画像を作れる",s:{wr:0,sns:2,de:2,img:2,sl:2,web:1,pc:0,en:0,co:0}},
+    {l:"あまり使ったことはないが興味がある",s:{wr:1,sns:1,de:1,img:1,sl:1,web:1,pc:0,en:0,co:0}},
+    {l:"デザイン・画像編集は得意でも好きでもない",s:{wr:2,sns:0,de:0,img:0,sl:0,web:0,pc:2,en:2,co:2}},
+  ]},
+  {id:9,text:"Excelや資料作成・データ整理の作業は得意ですか？",hint:"仕事・学校での経験も含めて考えてください",opts:[
+    {l:"Excelが得意、VBAやGASも少し使ったことがある",s:{wr:0,sns:0,de:0,img:0,sl:1,web:1,pc:4,en:3,co:1},excelLevel:"advanced"},
+    {l:"Excelは普通に使える（関数くらいなら）",s:{wr:1,sns:0,de:0,img:0,sl:2,web:0,pc:1,en:0,co:1},excelLevel:"basic"},
+    {l:"PowerPoint・Googleスライドで資料を作るのは得意",s:{wr:1,sns:1,de:2,img:1,sl:4,web:0,pc:1,en:0,co:1}},
+    {l:"どちらも得意ではない",s:{wr:2,sns:2,de:1,img:2,sl:0,web:1,pc:0,en:0,co:0}},
+  ]},
+  {id:10,text:"「1件目の仕事」に求めることとして最も近いものは？",hint:"正直な気持ちを優先してください",opts:[
+    {l:"とにかく実績・ポートフォリオが欲しい（金額は少なくていい）",s:{wr:2,sns:1,de:3,img:3,sl:2,web:2,pc:1,en:2,co:1}},
+    {l:"少額でも早く収入を得る経験がしたい",s:{wr:3,sns:3,de:1,img:2,sl:0,web:1,pc:1,en:0,co:0}},
+    {l:"自分のスキルが通用するか試したい",s:{wr:2,sns:1,de:2,img:2,sl:2,web:2,pc:2,en:3,co:2}},
+    {l:"長く続けられる仕事の最初の一歩にしたい",s:{wr:1,sns:2,de:1,img:1,sl:1,web:2,pc:1,en:1,co:2}},
+  ]},
+  {id:11,text:"「毎月コツコツ」と「短期集中プロジェクト型」どちらが向いていますか？",hint:"直感で選んでください",opts:[
+    {l:"毎月コツコツ継続する仕事が好き",s:{wr:2,sns:3,de:1,img:1,sl:1,web:1,pc:2,en:1,co:2}},
+    {l:"短期集中のプロジェクト型が向いている",s:{wr:1,sns:0,de:2,img:2,sl:3,web:3,pc:1,en:2,co:1}},
+    {l:"どちらも経験してみたい",s:{wr:2,sns:2,de:2,img:2,sl:2,web:2,pc:1,en:1,co:2}},
+    {l:"正直まだわからない",s:{wr:1,sns:1,de:1,img:1,sl:1,web:1,pc:1,en:1,co:1}},
+  ]},
+  {id:12,text:"時間・投資のキャパシティを教えてください",hint:"無理のない範囲で正直に選んでください",opts:[
+    {l:"時間もお金もほぼ使えない（今すぐ収入が必要）",s:{wr:3,sns:3,de:1,img:2,sl:0,web:0,pc:1,en:0,co:0}},
+    {l:"週数時間なら確保できる（少しずつ学びながら進めたい）",s:{wr:2,sns:2,de:2,img:2,sl:2,web:1,pc:1,en:1,co:1}},
+    {l:"週10時間以上確保できる（しっかり学んで高単価を狙いたい）",s:{wr:1,sns:1,de:2,img:2,sl:2,web:3,pc:2,en:3,co:2}},
+    {l:"学習費用にも投資できる（ツール・教材代OK）",s:{wr:1,sns:1,de:2,img:2,sl:2,web:3,pc:2,en:3,co:2}},
+  ]},
+];
+
+// ════════════════════════════════════════════════════
+// STOCK QUESTIONS (8問)
+// ════════════════════════════════════════════════════
+const ST_QS = [
+  {id:1,text:"ストック型収入について正直にどう感じますか？",hint:"すぐ稼げなくてもいい・すぐ稼ぎたいなど正直に",opts:[
+    {l:"時間がかかってもじっくり積み上げていきたい",s:{ai:1,sf:2,nt:2,yt:2,ig:1,ur:1,af:2}},
+    {l:"3ヶ月以内に何かしら成果を出したい",s:{ai:3,sf:1,nt:2,yt:0,ig:2,ur:1,af:2}},
+    {l:"クライアントワークと並走して少しずつやりたい",s:{ai:2,sf:2,nt:1,yt:1,ig:2,ur:2,af:2}},
+    {l:"将来的にストック収入を主軸にしたい",s:{ai:2,sf:2,nt:2,yt:3,ig:2,ur:2,af:2}},
+  ]},
+  {id:2,text:"毎日・毎週コツコツ作業を続けることは得意ですか？",hint:"継続力のタイプで向いているジャンルが変わります",opts:[
+    {l:"得意。習慣化すれば続けられる",s:{ai:2,sf:3,nt:2,yt:2,ig:3,ur:1,af:3}},
+    {l:"まあまあ。目標があれば続けられる",s:{ai:2,sf:2,nt:2,yt:2,ig:2,ur:2,af:2}},
+    {l:"得意ではないがやらないといけなければできる",s:{ai:2,sf:1,nt:1,yt:1,ig:1,ur:2,af:1}},
+    {l:"コツコツより一気にやって完成させる方が好き",s:{ai:3,sf:1,nt:2,yt:0,ig:0,ur:3,af:2}},
+  ]},
+  {id:3,text:"「表現」として一番自然にできるものは？",hint:"好き嫌いではなく「自然にできる」で選んでください",opts:[
+    {l:"画像・イラスト・写真などビジュアルで表現する",s:{ai:4,sf:4,nt:0,yt:0,ig:2,ur:0,af:2}},
+    {l:"文章・テキストで伝える・書くのが自然",s:{ai:0,sf:0,nt:4,yt:1,ig:2,ur:1,af:4}},
+    {l:"話す・喋る・動画で伝えるのが自然",s:{ai:0,sf:0,nt:0,yt:4,ig:2,ur:1,af:2}},
+    {l:"音楽・サウンドで表現するのが好き",s:{ai:0,sf:0,nt:0,yt:3,ig:1,ur:0,af:1}},
+  ]},
+  {id:4,text:"AI画像生成ツール（Midjourney・DALL-E等）の経験はありますか？",hint:"使ったことがなくてもOKです",opts:[
+    {l:"よく使っていてクオリティの高い画像が作れる",s:{ai:4,sf:3,nt:0,yt:0,ig:2,ur:0,af:2}},
+    {l:"少し触ったことがある",s:{ai:3,sf:2,nt:0,yt:0,ig:1,ur:0,af:1}},
+    {l:"使ったことはないが興味がある",s:{ai:2,sf:1,nt:0,yt:0,ig:1,ur:0,af:1}},
+    {l:"画像生成にはあまり興味がない",s:{ai:0,sf:0,nt:2,yt:2,ig:1,ur:2,af:2}},
+  ]},
+  {id:5,text:"YouTubeやInstagramで発信することについてどう感じますか？",hint:"今やっているかどうかではなく、気持ちで選んでください",opts:[
+    {l:"顔出し・声出しでもやってみたい",s:{ai:0,sf:0,nt:1,yt:4,ig:2,ur:1,af:2}},
+    {l:"顔出しは嫌だが声は出せる、または文字・画像発信なら",s:{ai:1,sf:0,nt:2,yt:2,ig:3,ur:1,af:3}},
+    {l:"発信自体は好きだが人前に出るのは苦手",s:{ai:1,sf:1,nt:3,yt:0,ig:2,ur:2,af:3}},
+    {l:"発信よりも「作って売る」の方が向いている",s:{ai:3,sf:3,nt:2,yt:0,ig:0,ur:2,af:2}},
+  ]},
+  {id:6,text:"占い・スピリチュアル・カウンセリングへの興味はありますか？",hint:"趣味・関心レベルでもOKです",opts:[
+    {l:"占いが好き・趣味でやっている",s:{ai:0,sf:0,nt:1,yt:1,ig:2,ur:4,af:2}},
+    {l:"少し興味がある・スピリチュアル系は好き",s:{ai:0,sf:0,nt:1,yt:1,ig:1,ur:2,af:1}},
+    {l:"あまり興味はない",s:{ai:2,sf:2,nt:2,yt:2,ig:1,ur:0,af:2}},
+    {l:"全く興味がない・苦手",s:{ai:2,sf:2,nt:2,yt:2,ig:1,ur:0,af:2}},
+  ]},
+  {id:7,text:"ストック型で一番大切にしたいことは何ですか？",hint:"優先順位で選んでください",opts:[
+    {l:"なるべく早く最初の売り上げを出すこと",s:{ai:3,sf:0,nt:2,yt:0,ig:1,ur:1,af:2}},
+    {l:"寝ていても入ってくるほぼ完全な不労所得を作ること",s:{ai:2,sf:3,nt:2,yt:2,ig:1,ur:1,af:2}},
+    {l:"自分のブランド・ファンを作って長期的に稼ぐこと",s:{ai:0,sf:0,nt:2,yt:3,ig:3,ur:2,af:3}},
+    {l:"好きなことをやりながら収入を得ること",s:{ai:1,sf:1,nt:2,yt:2,ig:2,ur:3,af:2}},
+  ]},
+  {id:8,text:"今後、ストック型にかけられる時間は週どのくらいですか？",hint:"正直に選んでください。多いほど良いわけではありません",opts:[
+    {l:"週3時間未満（スキマ時間のみ）",s:{ai:3,sf:2,nt:1,yt:0,ig:1,ur:1,af:1}},
+    {l:"週3〜7時間（1日1時間程度）",s:{ai:2,sf:2,nt:2,yt:1,ig:2,ur:2,af:2}},
+    {l:"週7〜15時間（本気で取り組める）",s:{ai:2,sf:2,nt:2,yt:2,ig:3,ur:2,af:3}},
+    {l:"週15時間以上（ストックを主軸にしたい）",s:{ai:1,sf:2,nt:2,yt:3,ig:3,ur:2,af:3}},
+  ]},
+];
+
+// ════════════════════════════════════════════════════
+// CW GENRES (9)
+// ════════════════════════════════════════════════════
+const CW = {
+  wr:{key:'wr',name:'ライティング・文章系',emoji:'✍️',col:'c-writing',
+    intro:'最も参入しやすい定番ジャンル。「丁寧に書ける」それだけで仕事になります。',
+    jobs:['SEO記事執筆（1記事1,000〜3,000円）','商品説明文・LP文章','ブログリライト・校正','SNS投稿文の作成代行'],
+    tags:['SEO記事','商品説明文','メルマガ','LP','リライト'],
+    prices:[{p:'初案件',v:'1記事 1,000〜2,000円',n:'実績・レビュー獲得最優先'},{p:'実績あり',v:'1記事 2,000〜8,000円',n:'レビュー2〜3件で単価アップ'},{p:'安定期',v:'1記事 5,000〜20,000円',n:'専門ジャンル・継続契約で高単価'}],
+    proposal:`はじめまして。ライターの[あなたの名前]と申します。
+
+[案件ジャンル]記事の案件を拝見し、ぜひお力になりたいと思い応募しました。
+
+[得意分野・経験]があり、読者に伝わりやすい文章を大切にしています。現在実績を積み始めたところですが、丁寧なコミュニケーションと納期厳守を何より大切にしています。
+
+よろしくお願いします。`,
+    checklist:['ランサーズ・クラウドワークス両方に登録した','プロフィール写真・自己紹介を記入した','テスト記事1本書いた','3件以上に応募した','初案件を受注した','納品してレビューをもらった']},
+  sns:{key:'sns',name:'SNS・コンテンツ運用',emoji:'📱',col:'c-sns',
+    intro:'「SNSを使っている」経験がそのまま仕事の武器になります。スマホ完結案件も多いです。',
+    jobs:['Instagram/X投稿文の作成代行','SNSスケジュール管理・予約投稿','ハッシュタグリサーチ','Canvaを使ったSNS画像作成'],
+    tags:['Instagram運用','X運用','コンテンツ企画','サムネイル','投稿カレンダー'],
+    prices:[{p:'初案件',v:'月 5,000〜15,000円',n:'月5〜10投稿の小規模から'},{p:'実績あり',v:'月 15,000〜30,000円',n:'継続契約・投稿数増加で単価アップ'},{p:'安定期',v:'月 30,000〜80,000円',n:'複数クライアント×継続で安定収入'}],
+    proposal:`はじめまして。SNSコンテンツ制作の[あなたの名前]と申します。
+
+[Instagram/X]運用サポートの案件を拝見し、ぜひお手伝いしたいと思い応募しました。
+
+[SNS運用経験・フォロワー数など]があり、反応を生みやすいコンテンツを研究しています。まずは小さな範囲からお任せいただき、サンプル投稿文を1本添付しましたのでご参考ください。
+
+よろしくお願いします。`,
+    checklist:['ランサーズ・クラウドワークス両方に登録した','プロフィール・自己紹介を記入した','仕事用SNSアカウントを整備した','サンプル投稿文を1本書いた','3件以上に応募した','初案件を受注した']},
+  de:{key:'de',name:'デザイン・クリエイティブ',emoji:'🎨',col:'c-creative',
+    intro:'Canvaから始められます。Photoshop・Illustratorが使えると一気に高単価案件に対応できます。',
+    jobs:['バナー・サムネイル制作（1枚500〜3,000円）','名刺・チラシのデザイン','SNS用投稿画像の作成','アイコン・ヘッダー画像制作'],
+    tags:['バナー制作','サムネイル','Photoshop','Illustrator','Canva'],
+    prices:[{p:'初案件',v:'1点 500〜2,000円',n:'実績づくりが最優先'},{p:'実績あり',v:'1点 2,000〜8,000円',n:'ポートフォリオ充実で単価アップ'},{p:'安定期',v:'1点 8,000〜30,000円',n:'専門性・ツールスキルで高単価'}],
+    proposal:`はじめまして。デザイナーの[あなたの名前]と申します。
+
+[バナー/チラシ/SNS画像]制作の案件を拝見し、ぜひお力になりたいと思い応募しました。
+
+Canvaをメインに使い、シンプルで目を引くビジュアルを制作しています。サンプルデザインを[●点]添付しましたのでご確認ください。修正対応も丁寧に行います。
+
+よろしくお願いします。`,
+    checklist:['ランサーズ・クラウドワークス両方に登録した','Canvaでサンプルを2〜3点作った','プロフィールにサンプルを掲載した','3件以上に応募した','初案件を受注した','ポートフォリオページをまとめた']},
+  img:{key:'img',name:'画像生成・AI加工',emoji:'🖼️',col:'c-img',
+    intro:'Midjourney・DALL-E等のAI画像生成＋Photoshop・Illustratorでの加工スキルが活かせるジャンル。需要急増中です。',
+    jobs:['AIアイキャッチ・素材生成（1点500〜3,000円）','商品画像・背景生成・加工','絵本・キャラクター画像制作','プロンプトエンジニアリング代行'],
+    tags:['AI画像生成','アイキャッチ','Midjourney','DALL-E','画像加工'],
+    prices:[{p:'初案件',v:'1点 500〜2,000円',n:'ポートフォリオ作りを最優先に'},{p:'実績あり',v:'1点 2,000〜10,000円',n:'専門特化で単価が上がりやすい'},{p:'安定期',v:'1セット 10,000〜50,000円',n:'キャラ設定・世界観ごとの単価設定'}],
+    proposal:`はじめまして。AI画像クリエイターの[あなたの名前]と申します。
+
+AI画像生成の案件を拝見し、ぜひお力になりたいと思い応募しました。
+
+[Midjourney/DALL-E等]を使ったAI画像生成・加工を得意としており、クライアントのイメージを形にすることを大切にしています。サンプル画像を[●点]添付しましたのでご確認ください。
+
+よろしくお願いします。`,
+    checklist:['ランサーズ・クラウドワークス両方に登録した','AI生成のサンプル画像を5点以上作った','プロフィールにポートフォリオを掲載した','3件以上に応募した','初案件を受注した','納品してレビューをもらった']},
+  sl:{key:'sl',name:'スライド・図解資料作成',emoji:'📊',col:'c-slide',
+    intro:'NotebookLMや図解ツールを使ったスライド制作。構成力＋デザインセンスが活かせる高単価ジャンルです。',
+    jobs:['提案書・ピッチ資料の作成（PowerPoint/Canva）','NotebookLMを使った資料まとめ・図解化','研修・セミナースライド制作','インフォグラフィック・図解コンテンツ制作'],
+    tags:['提案書','図解制作','NotebookLM','研修スライド','インフォグラフィック'],
+    prices:[{p:'初案件',v:'1件 3,000〜10,000円',n:'枚数・複雑さに応じて設定'},{p:'実績あり',v:'1件 10,000〜30,000円',n:'ビジネス向け専門資料で高単価'},{p:'安定期',v:'1件 30,000〜100,000円',n:'IRや採用資料・図解特化で高額案件'}],
+    proposal:`はじめまして。スライド資料制作の[あなたの名前]と申します。
+
+[提案書/研修資料/ピッチ資料]制作の案件を拝見し、ぜひお力になりたいと思い応募しました。
+
+PowerPoint・Googleスライド・Canvaを使った資料制作を得意としており、「伝わるレイアウト」にこだわって制作しています。サンプル資料を[●点]添付しましたのでご確認ください。
+
+よろしくお願いします。`,
+    checklist:['ランサーズ・クラウドワークス両方に登録した','サンプルスライドを2〜3点作った','プロフィールにサンプルを掲載した','3件以上に応募した','初案件を受注した','納品してレビューをもらった']},
+  web:{key:'web',name:'Web制作・LP制作',emoji:'🌐',col:'c-web',
+    intro:'学習は必要だが1案件の単価が高い。WordPressが使えるだけで仕事になります。',
+    jobs:['WordPressブログのセットアップ代行','LP・サイトの文章・画像の更新','Wix・STUDIOでのサイト構築','既存サイトの修正・改善補助'],
+    tags:['WordPress','LP制作','Wix','STUDIO','サイト修正'],
+    prices:[{p:'初案件',v:'1件 5,000〜20,000円',n:'修正・更新系から始めやすい'},{p:'実績あり',v:'1件 20,000〜80,000円',n:'LP制作・サイト丸ごとで単価アップ'},{p:'安定期',v:'1件 80,000〜300,000円',n:'コーポレートサイト・ECで高単価'}],
+    proposal:`はじめまして。Web制作の[あなたの名前]と申します。
+
+[WordPress/LP/サイト修正]の案件を拝見し、ぜひお力になりたいと思い応募しました。
+
+WordPressを使ったサイト構築・更新作業に取り組んでおり、ポートフォリオサイトを[●件]制作した実績があります。ポートフォリオ：[URL]
+
+よろしくお願いします。`,
+    checklist:['ランサーズ・クラウドワークス両方に登録した','WordPressで練習サイトを1つ作った','ポートフォリオURLをプロフィールに記載した','3件以上に応募した','初案件を受注した','HTML/CSSの基礎学習を始めた']},
+  pc:{key:'pc',name:'PC業務効率化',emoji:'⚡',col:'c-pc',
+    intro:'Excelやデータ整理の得意な人の強み。企業クライアントからの需要が安定しています。',
+    jobs:['Excelデータ整理・集計・グラフ作成','スプレッドシートの関数設定・整備','資料・報告書のフォーマット化','業務マニュアル・手順書作成'],
+    jobsAdvanced:['Googleスプレッドシート自動化・GAS開発','Excel VBAマクロ作成','データ集計・可視化・ダッシュボード作成','業務フロー改善・自動化ツール開発'],
+    tags:['Excel','データ整理','スプレッドシート','業務効率化','マニュアル'],
+    tagsAdvanced:['VBA','GAS','自動化','Excel関数','データ分析'],
+    prices:[{p:'初案件',v:'1件 3,000〜10,000円',n:'データ整理・集計補助から'},{p:'実績あり',v:'1件 10,000〜50,000円',n:'VBA/GAS案件で単価アップ'},{p:'安定期',v:'月 50,000〜150,000円',n:'継続保守・顧問契約で安定収入'}],
+    proposal:`はじめまして。PC業務効率化の[あなたの名前]と申します。
+
+Excelを使ったデータ整理・集計の案件を拝見し、ぜひお力になりたいと思い応募しました。
+
+Excelの関数・フォーマット整備を得意としており、見やすく使いやすいシートを作ることを大切にしています。業務内容を丁寧にヒアリングした上で対応いたします。
+
+よろしくお願いします。`,
+    proposalAdvanced:`はじめまして。業務効率化の[あなたの名前]と申します。
+
+[Excel/GAS/VBA]の案件を拝見し、ぜひお力になりたいと思い応募しました。
+
+Excelマクロ・GoogleスプレッドシートのGAS自動化を得意としており、[具体的な実績例]があります。業務フローを丁寧にヒアリングした上で実際に使いやすい仕組みを作ることを大切にしています。
+
+よろしくお願いします。`,
+    checklist:['ランサーズ・クラウドワークス両方に登録した','Excelサンプルシートをスクショでまとめた','3件以上に応募した','初案件を受注した','納品してレビューをもらった','スキルアップ（VBA/GAS）の学習を始めた'],
+    checklistAdvanced:['ランサーズ・クラウドワークス両方に登録した','練習用の自動化ツールを1つ作った','ポートフォリオ用スクショをまとめた','3件以上に応募した','初案件を受注した','継続保守の提案を検討した']},
+  en:{key:'en',name:'エンジニアリング・開発',emoji:'⚙️',col:'c-eng',
+    intro:'ノーコード・Notionテンプレートから始めるとハードルが下がります。単価は高め。',
+    jobs:['Notionテンプレート制作・セットアップ','Zapier/Makeノーコード設定','システム開発補助・APIつなぎ込み','ボット・自動化ツール開発'],
+    tags:['Notion','ノーコード','Zapier','Make','自動化'],
+    prices:[{p:'初案件',v:'1件 5,000〜20,000円',n:'ノーコード・Notionの小規模から'},{p:'実績あり',v:'1件 20,000〜100,000円',n:'開発規模が上がるほど単価アップ'},{p:'安定期',v:'月 50,000〜200,000円',n:'継続保守・顧問契約で高収入'}],
+    proposal:`はじめまして。ノーコード開発の[あなたの名前]と申します。
+
+[Notion/ノーコード/自動化]の案件を拝見し、ぜひお力になりたいと思い応募しました。
+
+Notionのテンプレート設計やZapier/Makeを使った自動化に取り組んでおり、業務課題を解決することを大切にしています。ポートフォリオ：[URLまたはスクショ]
+
+よろしくお願いします。`,
+    checklist:['ランサーズ・クラウドワークス両方に登録した','Notionで練習テンプレートを1つ作った','ポートフォリオをまとめた','3件以上に応募した','初案件を受注した','次のスキル（Python/JS等）学習を始めた']},
+  co:{key:'co',name:'コンサル・マーケ支援',emoji:'💼',col:'c-consult',
+    intro:'社会人経験や専門知識が直接武器に。スポット相談から始めると参入しやすいです。',
+    jobs:['SNS戦略スポットアドバイス（1〜2時間）','集客・マーケティング改善提案','業務フロー整理・マニュアル化','EC・ネットショップ改善アドバイス'],
+    tags:['スポットコンサル','改善提案','SNS戦略','マニュアル化','集客アドバイス'],
+    prices:[{p:'初案件',v:'1回 3,000〜10,000円',n:'スポット相談（1〜2時間）から'},{p:'実績あり',v:'1回 10,000〜30,000円',n:'成果事例で単価アップ'},{p:'安定期',v:'月 30,000〜100,000円',n:'顧問・月額契約で安定収入'}],
+    proposal:`はじめまして。マーケティング支援の[あなたの名前]と申します。
+
+コンサル・アドバイスの案件を拝見し、ぜひお力になりたいと思い応募しました。
+
+[得意ジャンル・経験]があり、[具体的な強み]について実践的なアドバイスができます。相談後は内容をまとめたメモをお送りします。
+
+よろしくお願いします。`,
+    checklist:['ランサーズ・クラウドワークス両方に登録した','得意ジャンルを1つ決めた','簡単な提案書テンプレートを作った','3件以上に応募した','初案件（スポット相談）を受注した','相談後まとめメモを送った']},
+};
+
+// ════════════════════════════════════════════════════
+// STOCK GENRES (6)
+// ════════════════════════════════════════════════════
+const ST = {
+  ai:{key:'ai',name:'AI画像販売',emoji:'🖼️',
+    intro:'AIで生成した画像をメルカリ・Amazon・BOOTHで販売。コツコツ作れば不労所得化できます。',
+    platform:'メルカリ / Amazon / BOOTH',
+    howto:['テーマを決めてAI画像を20〜30枚生成する','メルカリに「AIアート」「デジタルデータ」として出品','最初は300〜500円から設定。売れたら価格を上げる','1ジャンルで実績が出たら別テーマへ展開'],
+    period:'早い（2〜4週間で初売り上げ可能）',
+    effort:'低〜中（スキマ時間でコツコツ作れる）',
+    parallel:'CW開始と同時に並走OK'},
+  sf:{key:'sf',name:'ストックフォト販売',emoji:'📸',
+    intro:'Adobe Stock・PIXTAへの登録で、1枚の画像が何度も売れる完全なストック収入になります。',
+    platform:'Adobe Stock / PIXTA / Shutterstock',
+    howto:['Adobe StockまたはPIXTAに投稿者登録する','AIで生成した素材・イラストを100枚以上投稿する','ダウンロード数が多いジャンルを分析してテーマを絞る','毎週10〜20枚のペースで継続投稿する'],
+    period:'中程度（3〜6ヶ月で安定的な収入が始まる）',
+    effort:'中（継続的な投稿が必要）',
+    parallel:'CW1件目獲得後に並走推奨'},
+  nt:{key:'nt',name:'有料note・情報発信',emoji:'📝',
+    intro:'自分の知識・経験を記事や電子書籍として販売。ファンが増えると継続収入になります。',
+    platform:'note / Brain / Kindle',
+    howto:['自分が詳しいテーマで無料記事を5本書く','反応が良かったテーマを有料記事に昇格（300〜1,000円）','マガジン（月額200〜500円）にまとめてサブスク化','SNSと連携してnoteへの流入を増やす'],
+    period:'中程度（1〜3ヶ月で最初の売り上げ）',
+    effort:'中（ライティング力が必要）',
+    parallel:'CW開始から1〜2ヶ月後に並走推奨'},
+  yt:{key:'yt',name:'YouTube収益化',emoji:'🎬',
+    intro:'AI音楽MV・解説動画・Shortsで収益化。時間はかかるが一度伸びると大きな収入に。',
+    platform:'YouTube（AdSense収益化）',
+    howto:['チャンネルのテーマを1つに絞る（AI音楽・AIアート・ノウハウ系など）','週1〜2本のペースで動画を投稿する','SUNO等で生成した音楽×MV形式か、20分以上のオムニバス動画が有効','1,000人・4,000時間を目指してまず50本投稿する'],
+    period:'遅い（収益化まで3〜12ヶ月）',
+    effort:'高（継続的な動画制作が必要）',
+    parallel:'CWで月3万円以上安定してから並走推奨'},
+  ig:{key:'ig',name:'Instagram発信',emoji:'📸',
+    intro:'フォロワーを育てて商品・サービス・アフィリエイトへ誘導。ブランド化で安定収入に。',
+    platform:'Instagram → note/自社商品/アフィリ',
+    howto:['テーマを1つに絞ってプロフィールを整備する','AIアート・AIノウハウ系の投稿を毎日または週3回投稿','リールを活用してフォロワーを1,000人まで増やす','フォロワーをnote・有料コンテンツ・アフィリへ誘導'],
+    period:'中程度（フォロワー1,000人まで3〜6ヶ月）',
+    effort:'中〜高（毎日の投稿継続が必要）',
+    parallel:'CW開始と同時に並走可能（スマホのみでもOK）'},
+  ur:{key:'ur',name:'占い・人生相談販売',emoji:'🔮',
+    intro:'占い・人生相談をサービス化してCoconaraや有料鑑定として販売。GPTsで自動化も可能。',
+    platform:'ココナラ / note / BASE / Instagram / X',
+    howto:['ココナラに占い・人生相談サービスを出品する（500〜3,000円/件から）','カスタムGPTで占いツールを作成して無料体験として提供','InstagramやXで「今日の占い」投稿を毎日発信してフォロワーを集める','有料月額コミュニティ（LINE・Discord）で定期収入化'],
+    period:'中程度（ococonaraは登録翌日から販売可能）',
+    effort:'中〜高（SNS集客の継続が必要）',
+    parallel:'CW1件目獲得後から並走可能'},
+  af:{key:'af',name:'AIアフィリエイト',emoji:'💰',
+    intro:'AIで量産したInstagram・Threads・X投稿で集客してアフィリエイト報酬を獲得。完全ストック型。',
+    platform:'Instagram / Threads / X → アフィリリンク',
+    howto:['ASP（A8.net・もしもアフィリエイト等）に無料登録する','AIで毎日10〜20件の投稿を自動生成してInstagram/Threadsに投稿','フォロワーが増えたらアフィリリンクを投稿のURLや概要欄に設置','月5万PV相当のフォロワーが集まると月1〜10万円の報酬が発生'],
+    period:'中程度（フォロワー1,000人まで1〜3ヶ月）',
+    effort:'中（毎日の投稿継続が必要。AI活用で大幅に楽になる）',
+    parallel:'CW開始と同時に並走OK（スマホのみでも可能）'},
+};
+
+// ════════════════════════════════════════════════════
+// ADVICE
+// ════════════════════════════════════════════════════
+const CW_ADVICE = {
+  wr:`あなたは「言葉で伝える力」がしっかり備わっているタイプです。文章への抵抗が少ない、好きという気持ちは、ライティングの仕事においてそれだけで大きなアドバンテージになります。\n\n最初の1件は**ランサーズ・クラウドワークス両方に無料登録**して、「記事作成・ライティング」カテゴリで予算1,000〜3,000円の案件に応募するのがおすすめです。「商品紹介文を5本書いてほしい」「ブログ記事を1本リライトしてほしい」といった小さな案件から始めると採用されやすいです。\n\nまずは単価より「1件完走すること」だけを目標にしてください。それがすべての始まりです。`,
+  sns:`あなたはSNSや発信に自然な親しみを持っているタイプです。「投稿を見るのが好き」「発信したことがある」という経験は、SNS運用の仕事を理解するうえで実は大きな強みになります。\n\n**ランサーズ・クラウドワークス両方に登録**して「SNS運用・投稿代行」カテゴリを検索し、月3〜5投稿の小規模な運用補助案件に応募してみましょう。応募時に「サンプル投稿文を1本添付」するだけで採用率が上がります。\n\n「完璧な投稿を作ること」より「クライアントのトーンに合わせること」を意識するだけで評価がグッと上がりますよ。`,
+  de:`あなたはビジュアルで表現することへの感性や興味を持っているタイプです。「かっこいいものを作りたい」というその気持ちがクリエイティブ系の仕事では一番大切な出発点になります。\n\n**ランサーズ・クラウドワークス両方**で「バナー・サムネイル制作」カテゴリを検索し、1枚500〜1,500円の単発案件に応募するのがおすすめです。まずCanva（無料）で作れる範囲から始めて大丈夫です。\n\nツールの使い方よりも「クライアントのイメージを形にする力」の方が大事です。まず1件、形にすることを楽しんでください。`,
+  img:`あなたはAI画像生成への適性と興味があるタイプです。「画像を使って表現したい」という感覚は、AI画像生成案件でそのまま強みになります。\n\n**ランサーズ・クラウドワークス両方**で「AI画像生成・素材制作」カテゴリを検索してみましょう。まずMidjourney・DALL-Eなどで自分のサンプル画像を5〜10点作成してポートフォリオを整備してから応募すると採用率が大幅に上がります。\n\nAI画像生成は需要急増中のジャンルです。今始めることで先行者優位を活かせます。`,
+  sl:`あなたは構成力とデザインセンスを兼ね備えたタイプです。スライド資料作成は「見やすくまとめる力」が直接評価されるジャンルで、あなたの強みが活かせます。\n\n**ランサーズ・クラウドワークス両方**で「スライド・資料作成」カテゴリを検索してみましょう。まずPowerPoint・Googleスライド・Canvaでサンプル資料を2〜3点作成してからプロフィールに掲載すると、採用率が大幅に上がります。\n\nビジネス向け資料は単価が高めで、継続案件になりやすいのが魅力です。`,
+  web:`あなたはデジタルツールへの適応力が高く、Web制作に向いている素質があります。「サイトを形にすること」への興味は学習を続ける最高の原動力です。\n\n**ランサーズ・クラウドワークス両方**で「WordPress・サイト修正」案件を狙いましょう。「既存サイトの文章を更新してほしい」といった修正・更新系の案件なら、ゼロからの制作より敷居が低いです。\n\n「完璧に作れるようになってから」ではなく「70%できたら応募する」くらいのスタンスで動き始めるのがゼロイチ達成のコツです。`,
+  pc:`あなたはExcel・データ整理系の業務効率化への適性があります。事務・総務・経理などのビジネス経験があれば、そのままクライアントの「困りごと」を理解できる強みになります。\n\n**ランサーズ・クラウドワークス両方**で「Excelデータ整理・集計・スプレッドシート整備」などのキーワードで案件を探してみましょう。まず自分が使ったExcelシートのサンプルをスクショしてポートフォリオにまとめてから応募すると効果的です。\n\nVBAやGASはこれから学んでいけばOK。まずは「関数・データ整理ができる人」として実績を積み、徐々に単価を上げていくのが現実的なルートです。`,
+  en:`あなたは仕組みを作ることへの適性があり、エンジニアリング・開発系の仕事で力を発揮できるタイプです。\n\n**ランサーズ・クラウドワークス両方**で「ノーコード・自動化ツール」や「Notionテンプレート」カテゴリを検索してみましょう。本格的なプログラミング経験がなくても対応できる案件が多くあります。\n\n技術力よりも「クライアントの困りごとを解決できるか」が重要です。まず小さな問題を一つ解決することから始めましょう。`,
+  co:`あなたはこれまでの経験や知識を活かして相手の課題に寄り添える「サポート型」の強みを持っています。\n\n**ランサーズ・クラウドワークス両方**で「スポット相談・コンサル」案件を探してみましょう。「SNS運用のやり方を教えてほしい」「業務フローを整理したい」といった1〜2時間のスポット相談なら、資料不要でZoomだけで完結します。\n\n「すべての問題を解決しようとしない」こと。1回の相談で1つの課題が前進すれば十分な価値があります。`,
+};
+
+const ST_ADVICE = {
+  ai:`あなたはAI画像販売への適性が最も高いタイプです。「作ってすぐ売れる」スピード感があなたに合っています。\n\nまず**メルカリにデジタルデータとして出品する**ところから始めましょう。テーマを1つ決めて（例：和風イラスト・北欧風インテリア・ビジネスアイコン）、AI画像を20〜30枚生成して300〜500円から出品します。\n\n最初の1件が売れた瞬間から「AIで稼ぐ」がリアルになります。クライアントワークと同時並走で今すぐ始められます。`,
+  sf:`あなたはストックフォト販売への適性が高いタイプです。「1枚の画像が何度も売れる」という完全ストック型の収入モデルがあなたに合っています。\n\nまず**Adobe StockまたはPIXTAに投稿者登録**して、AIで生成した画像を100枚投稿することを最初の目標にしましょう。ダウンロード数が多いテーマ（ビジネス・自然・食べ物など）に絞ると効率的です。\n\n毎週10〜20枚コツコツ投稿を続ければ、3〜6ヶ月で安定的な収入ベースが作れます。`,
+  nt:`あなたはnoteやBrainなどの有料コンテンツ販売への適性が高いタイプです。「自分の知識・経験を言語化して売る」という形があなたに合っています。\n\nまず**自分が詳しいテーマで無料記事を5本書く**ことから始めましょう。「なんだ、この人詳しいな」と思われる記事が書けたら、有料記事（300〜1,000円）を出してみます。\n\nライティングのCW案件と相性が良く、両方で文章力が鍛えられる好循環が生まれます。`,
+  yt:`あなたはYouTubeでの発信への適性があるタイプです。時間はかかりますが、一度チャンネルが育てば最も大きな収入源になります。\n\nSUNOで生成した音楽をMV形式でYouTubeに投稿するか、20分以上のオムニバス形式の音楽動画を週1〜2本投稿する戦略が有効です。**まず50本投稿を目標**に継続することが最初の壁を超えるコツです。\n\nCWで月3万円以上が安定してから本格的に取り組むと、収入の柱が崩れずに進められます。`,
+  ig:`あなたはInstagram発信への適性が高いタイプです。視覚的な表現力と継続発信の組み合わせが強みになります。\n\nテーマを1つ決めて（AIアート・AIツール活用・ライフスタイル）、**毎日または週3〜4回の投稿**を続けてフォロワーを育てましょう。リールを積極的に活用すると伸びが早いです。\n\nフォロワーが1,000人を超えたら、noteの有料記事やアフィリエイトへの誘導で収益化できます。CWと同時並走でスマホだけでも始められます。`,
+  ur:`あなたは占い・人生相談販売への適性があるユニークなタイプです。占いへの興味や直感力をそのまま収益に変えられます。\n\nまず**ココナラに占い・人生相談サービスを出品**してみましょう（500円/件から）。登録翌日から販売できるので、最速でお金になるストック手段の一つです。並行してInstagramやXで「今日の占い」投稿を毎日発信してフォロワーを育てます。\n\nGPTsで占いツールを作って無料体験として提供すると、有料鑑定への誘導もスムーズになります。`,
+  af:`あなたはAIアフィリエイトへの適性が高いタイプです。「作って流す」の繰り返しで収益が積み上がっていく仕組みがあなたに合っています。\n\nまず**A8.net・もしもアフィリエイトに無料登録**して、自分が紹介したいジャンルの商品を選びましょう。次にAIでInstagram・Threads・X用の投稿を毎日10〜20件生成して、プロフィールのリンクにアフィリリンクを設置します。\n\nフォロワーが1,000人を超えたあたりから報酬が発生しやすくなります。CWと同時並走でスマホだけでも始められるのが最大の強みです。`,
+};
+
+// ════════════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════════════
+let st = {
+  screen:'intro',
+  phase:'cw', // 'cw' | 'stock' | 'loading' | 'result'
+  qIdx:0,
+  cwAnswers:[], stAnswers:[],
+  cwScores:null, stScores:null,
+  cwTop:null, stTop:null,
+  aiCwText:'', aiStText:'', aiDone:false,
+  tab:'schedule',
+  checks:{},
+  careerText:'',        // 職歴・経験の自由記入
+  freeInputs:{},        // 各質問の自由記入（Q5など）
+  careerBonus:{},       // 職歴解析から加算するボーナススコア
+};
+
+// ════════════════════════════════════════════════════
+// LOGIC
+// ════════════════════════════════════════════════════
+// ── 職歴キーワード → スコアボーナス変換 ──────────────────────────
+const CAREER_KEYWORDS = {
+  wr:  ['ライター','記者','編集','ブログ','コピー','広報','出版','マーケ','広告','文章','国語','文学','翻訳','司書','新聞','メディア'],
+  sns: ['SNS','インスタ','ツイッター','YouTube','インフルエンサー','PR','広報','ブランド','コミュニティ'],
+  de:  ['デザイン','デザイナー','グラフィック','DTP','印刷','Photoshop','Illustrator','イラスト','アート','美術','美大'],
+  img: ['画像','イラスト','CG','3D','映像','写真','カメラマン','フォトグラファー','アニメ','漫画'],
+  sl:  ['プレゼン','資料','パワポ','PowerPoint','スライド','コンサル','講師','研修','セミナー','教育'],
+  web: ['Web','ウェブ','HP','ホームページ','WordPress','HTML','CSS','LP','EC','ネットショップ'],
+  pc:  ['Excel','エクセル','VBA','GAS','スプレッドシート','事務','経理','総務','データ','分析','統計','経理','会計','簿記','財務'],
+  en:  ['エンジニア','プログラマー','開発','システム','SE','IT','Python','JavaScript','Java','PHP','Ruby','インフラ','サーバー','AWS','SQL','データベース','ノーコード'],
+  co:  ['コンサル','マネージャー','管理職','経営','起業','営業','マーケティング','戦略','MBA','商社','金融','保険','不動産','医師','弁護士','士業','教師','先生','講師','カウンセラー','看護','薬剤師','医療'],
+};
+const STOCK_CAREER_KEYWORDS = {
+  ai:  ['画像','デザイン','アート','CG','イラスト','写真'],
+  sf:  ['写真','カメラ','フォト','画像','素材'],
+  nt:  ['ブログ','記事','ライター','執筆','編集','文章','研究','専門'],
+  yt:  ['動画','YouTube','配信','映像','放送','音楽','演奏'],
+  ig:  ['SNS','インスタ','発信','インフルエンサー','PR'],
+  ur:  ['占い','スピリチュアル','カウンセリング','相談','コーチ','心理'],
+  af:  ['アフィリエイト','ブログ','SNS','集客','マーケティング','広告'],
+};
+
+function analyzeCareer(text){
+  if(!text||text.trim().length<2) return {};
+  const t = text.toLowerCase();
+  const bonus = {wr:0,sns:0,de:0,img:0,sl:0,web:0,pc:0,en:0,co:0};
+  Object.entries(CAREER_KEYWORDS).forEach(([k,words])=>{
+    words.forEach(w=>{if(t.includes(w.toLowerCase())) bonus[k]+=3;});
+    if(bonus[k]>6) bonus[k]=6; // cap at +6
+  });
+  return bonus;
+}
+function analyzeCareerStock(text){
+  if(!text||text.trim().length<2) return {};
+  const t = text.toLowerCase();
+  const bonus = {ai:0,sf:0,nt:0,yt:0,ig:0,ur:0,af:0};
+  Object.entries(STOCK_CAREER_KEYWORDS).forEach(([k,words])=>{
+    words.forEach(w=>{if(t.includes(w.toLowerCase())) bonus[k]+=2;});
+    if(bonus[k]>4) bonus[k]=4;
+  });
+  return bonus;
+}
+
+function calcCW(){
+  const r={wr:0,sns:0,de:0,img:0,sl:0,web:0,pc:0,en:0,co:0};
+  st.cwAnswers.forEach(a=>{if(a)Object.keys(r).forEach(k=>{r[k]+=(a.s[k]||0);});});
+  // 職歴ボーナス加算
+  const cb = analyzeCareer(st.careerText);
+  Object.keys(r).forEach(k=>{r[k]+=(cb[k]||0);});
+  // Q5自由記入ボーナス
+  if(st.freeInputs.q5){const fb=analyzeCareer(st.freeInputs.q5);Object.keys(r).forEach(k=>{r[k]+=(fb[k]||0);});}
+  const mx=Math.max(...Object.values(r));
+  const n={};
+  Object.keys(r).forEach(k=>{n[k]=mx>0?Math.round((r[k]/mx)*100):0;});
+  return n;
+}
+function calcST(){
+  const r={ai:0,sf:0,nt:0,yt:0,ig:0,ur:0,af:0};
+  st.stAnswers.forEach(a=>{if(a)Object.keys(r).forEach(k=>{r[k]+=(a.s[k]||0);});});
+  // 職歴ボーナス加算
+  const cb = analyzeCareerStock(st.careerText);
+  Object.keys(r).forEach(k=>{r[k]+=(cb[k]||0);});
+  const mx=Math.max(...Object.values(r));
+  const n={};
+  Object.keys(r).forEach(k=>{n[k]=mx>0?Math.round((r[k]/mx)*100):0;});
+  return n;
+}
+function topK(obj,k=3){return Object.entries(obj).sort((a,b)=>b[1]-a[1]).slice(0,k).map(([key])=>key);}
+
+function mdHtml(t){
+  return t.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\n\n/g,'</p><p style="margin-top:12px">').replace(/\n/g,'<br>');
+}
+function typewriter(text,id,onDone){
+  const el=document.getElementById(id);
+  if(!el)return;
+  let i=0;
+  (function tick(){
+    if(i<text.length){el.innerHTML=mdHtml(text.slice(0,i+1))+'<span class="ai-cursor"></span>';i++;setTimeout(tick,15);}
+    else{el.innerHTML='<p>'+mdHtml(text)+'</p>';if(onDone)onDone();}
+  })();
+}
+
+function phaseDots(){
+  const total=CW_QS.length+ST_QS.length;
+  let d='';
+  for(let i=0;i<CW_QS.length;i++){
+    const cls=i<st.cwAnswers.filter(Boolean).length?(st.phase==='cw'&&i===st.qIdx?'current':'done'):(st.phase==='cw'&&i===st.qIdx?'current':'');
+    d+=`<div class="step-dot ${cls}"></div>`;
+  }
+  for(let i=0;i<ST_QS.length;i++){
+    const ans=st.phase==='stock'||st.phase==='loading'||st.phase==='result';
+    const cls=ans?(i<st.stAnswers.filter(Boolean).length?(st.phase==='stock'&&i===st.qIdx?'current-stock':'done-stock'):(st.phase==='stock'&&i===st.qIdx?'current-stock':'')):'';
+    d+=`<div class="step-dot ${cls}"></div>`;
+  }
+  return d;
+}
+
+function copyProposal(){
+  const g=CW[st.cwTop[0]];
+  navigator.clipboard.writeText(g.proposal).then(()=>{
+    const btn=document.getElementById('copy-btn');
+    if(btn){btn.textContent='✅ コピーしました！';btn.classList.add('copied');setTimeout(()=>{btn.textContent='📋 テンプレートをコピー';btn.classList.remove('copied');},2000);}
+  });
+}
+
+function toggleCheck(key){
+  st.checks[key]=!st.checks[key];
+  renderChecklist();
+}
+function renderChecklist(){
+  const cwG=CW[st.cwTop[0]];
+  const stG=ST[st.stTop[0]];
+  const _q9ans = st.cwAnswers[8];
+  const _excelAdv = _q9ans && _q9ans.excelLevel === 'advanced';
+  const _cwCl = (cwG.key==='pc' && _excelAdv && cwG.checklistAdvanced) ? cwG.checklistAdvanced : cwG.checklist;
+  const allItems=[
+    ..._cwCl.map((t,i)=>({key:`cw_${i}`,text:t,prefix:'CW'})),
+    ...stG.howto.map((t,i)=>({key:`st_${i}`,text:t,prefix:'ストック'})),
+  ];
+  const total=allItems.length;
+  const done=allItems.filter(it=>st.checks[it.key]).length;
+  const pct=Math.round((done/total)*100);
+  const el=document.getElementById('cl-wrap');
+  if(!el)return;
+  el.innerHTML=`
+    <div class="cl-progress-row"><span>進捗</span><span>${done}/${total} 完了</span></div>
+    <div class="cl-track"><div class="cl-fill" style="width:${pct}%"></div></div>
+    ${allItems.map(it=>`
+      <div class="cl-item ${st.checks[it.key]?'done':''}" onclick="toggleCheck('${it.key}')">
+        <div class="cl-checkbox">${st.checks[it.key]?'<svg width="11" height="9" viewBox="0 0 11 9" fill="none"><path d="M1 4.5L4 7.5L10 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>':''}
+        </div>
+        <div class="cl-text"><span style="font-size:10px;font-weight:700;background:${it.prefix==='CW'?'var(--blue)':'var(--green)'};color:#fff;padding:1px 6px;border-radius:100px;margin-right:6px">${it.prefix}</span>${it.text}</div>
+      </div>`).join('')}
+    ${done===total?'<div style="margin-top:12px;padding:14px;background:var(--green-l);border:2px solid #69db7c;border-radius:11px;text-align:center;font-size:14px;font-weight:700;color:var(--green)">🎉 すべて完了！ゼロイチ達成です！</div>':''}
+  `;
+}
+
+function switchTab(t){
+  st.tab=t;
+  document.querySelectorAll('.tab').forEach(el=>el.classList.toggle('active',el.dataset.tab===t));
+  document.querySelectorAll('.tab-panel').forEach(el=>el.style.display=el.id===`panel-${t}`?'block':'none');
+  if(t==='checklist')renderChecklist();
+}
+
+// ════════════════════════════════════════════════════
+// RENDER
+// ════════════════════════════════════════════════════
+function appendCareerTag(tag){
+  if(st.careerText.includes(tag)){
+    st.careerText=st.careerText.replace(tag,'').replace(/、、/g,'、').trim();
+  } else {
+    st.careerText=(st.careerText?st.careerText+'、':'')+tag;
+  }
+  render();
+  setTimeout(()=>updateCareerText(st.careerText),50);
+}
+
+function render(){
+  const root=document.getElementById('main-content');
+
+  // ── INTRO ──
+  if(st.screen==='intro'){
+    root.innerHTML=`
+      <div class="card">
+        <div class="intro-grid">
+          <div class="intro-box"><div class="ico">🎯</div><h4>STEP 1：CW診断</h4><p>クライアントワークの向いているジャンルを12問で特定</p></div>
+          <div class="intro-box"><div class="ico">📦</div><h4>STEP 2：ストック診断</h4><p>ストック型収入の向いている手段を8問で特定</p></div>
+          <div class="intro-box"><div class="ico">🗺️</div><h4>統合ロードマップ</h4><p>あなただけの収入設計＋行動スケジュールが完成</p></div>
+        </div>
+        <div class="notice"><span style="font-size:18px;flex-shrink:0">💡</span><span>正解はありません。今の自分の状況に一番近いものを正直に選んでください。スキルや経験がゼロでも、あなたに合った収入の作り方は必ずあります。</span></div>
+        <button class="btn-primary" onclick="startCW()">診断スタート →</button>
+        <p class="q-note">全20問 ／ 所要時間：約5〜7分</p>
+      </div>`;
+    return;
+  }
+
+  // ── CAREER INPUT ──
+  if(st.screen==='career'){
+    root.innerHTML=`
+      <div class="career-card">
+        <div style="text-align:center;margin-bottom:20px">
+          <span style="font-size:36px">💼</span>
+          <h2 style="font-size:18px;font-weight:800;color:var(--navy);margin-top:8px">あなたのこれまでの経験を教えてください</h2>
+          <p style="font-size:12px;color:var(--text2);margin-top:6px;line-height:1.8">職歴・得意なこと・資格・趣味など、なんでもOKです。<br>この情報をもとに診断精度を高めます。</p>
+        </div>
+        <div class="free-input-label">💼 職歴・経験・得意なこと（自由に記入）</div>
+        <textarea class="free-input" id="career-input" rows="4"
+          placeholder="例：10年間システムエンジニアとして働いていました。Excelが得意で業務効率化の経験があります。趣味はイラストを描くことです。"
+          oninput="updateCareerText(this.value)">${st.careerText}</textarea>
+        <div class="career-detected" id="career-detected"></div>
+        <div style="margin-top:16px;margin-bottom:10px">
+          <div class="free-input-label">よく当てはまるものがあればタップしても選べます</div>
+          <div style="margin-top:6px">
+            ${['会社員（事務・総務・経理）','エンジニア・プログラマー','デザイナー・クリエイター','教師・講師・インストラクター','医療・介護・福祉系','営業・マーケティング','主婦・主夫・育児中','学生・第二新卒','フリーランス経験あり','特になし・白紙からスタート']
+              .map(tag=>`<span class="career-tag ${st.careerText.includes(tag)?'sel':''}" onclick="appendCareerTag('${tag}')">${tag}</span>`)
+              .join('')}
+          </div>
+        </div>
+        <button class="btn-primary" style="margin-top:16px" onclick="startQuizAfterCareer()">診断スタート →</button>
+        <p class="q-note">記入をスキップして進むこともできます</p>
+      </div>`;
+    // Trigger detection if text already exists
+    if(st.careerText) setTimeout(()=>updateCareerText(st.careerText),100);
+    return;
+  }
+
+  // ── CW QUIZ ──
+  if(st.screen==='quiz'&&st.phase==='cw'){
+    const q=CW_QS[st.qIdx];
+    const sel=st.cwAnswers[st.qIdx];
+    const pct=Math.round((st.qIdx/CW_QS.length)*100);
+    root.innerHTML=`
+      <div class="phase-bar">
+        <div class="phase-step ${st.phase==='cw'?'active':'done'}"><div class="ps-num">${st.phase==='cw'?'1':'✓'}</div>CW診断</div>
+        <div class="phase-step"><div class="ps-num">2</div>ストック診断</div>
+        <div class="phase-step"><div class="ps-num">3</div>結果</div>
+      </div>
+      <div class="progress-wrap">
+        <div class="progress-row"><span class="progress-label">CW診断 ${st.qIdx+1} / ${CW_QS.length}</span><span class="progress-pct">${pct}%</span></div>
+        <div class="progress-track"><div class="progress-fill pf-cw" style="width:${pct}%"></div></div>
+        <div class="step-dots">${phaseDots()}</div>
+      </div>
+      <div class="q-card">
+        <div class="q-section-label">STEP 1 ▸ クライアントワーク診断</div>
+        <span class="q-badge q-badge-cw">Q${q.id}</span>
+        <div class="q-text">${q.text}</div>
+        <div class="q-hint">${q.hint}</div>
+        <div class="options">${q.opts.map((o,i)=>`
+          <button class="opt ${sel&&sel===o?'sel':''}" onclick="selectCW(${i})">
+            <span class="opt-letter">${['A','B','C','D'][i]}</span><span>${o.l}</span>
+          </button>`).join('')}
+        </div>
+        ${sel&&sel.freeInput?`<div class="free-input-wrap">
+          <div class="free-input-label" style="margin-top:14px">✏️ 得意分野・スキルを具体的に教えてください（任意）</div>
+          <textarea class="free-input" id="free-input-q5" rows="2"
+            placeholder="例：医療事務10年・Excelが得意・料理ブログ運営中など"
+            oninput="updateFreeInput('q5',this.value)"></textarea>
+        </div>`:''}
+      </div>
+      <div class="nav-row">
+        ${st.qIdx>0?`<button class="btn-back" onclick="prevCW()">← 戻る</button>`:`<div></div>`}
+        <button class="btn-next btn-next-cw ${sel?'on':''}" onclick="nextCW()">${st.qIdx===CW_QS.length-1?'ストック型診断へ →':'次の質問 →'}</button>
+      </div>`;
+    return;
+  }
+
+  // ── TRANSITION ──
+  if(st.screen==='transition'){
+    const topCW=CW[Object.entries(calcCW()).sort((a,b)=>b[1]-a[1])[0][0]];
+    root.innerHTML=`
+      <div class="trans-screen">
+        <div class="trans-icon">✅</div>
+        <div class="trans-h">CW診断が完了しました！</div>
+        <div class="trans-p">
+          クライアントワークでは<br>
+          <span class="trans-badge" style="background:var(--blue-l);color:var(--navy);font-size:16px">${topCW.emoji} ${topCW.name}</span><br>
+          が最もあなたに向いています。<br><br>
+          次に、ストック型収入の<br>向いている手段を8問で診断します。
+        </div>
+        <button class="btn-primary" onclick="startStock()">ストック型診断へ →</button>
+      </div>`;
+    return;
+  }
+
+  // ── STOCK QUIZ ──
+  if(st.screen==='quiz'&&st.phase==='stock'){
+    const q=ST_QS[st.qIdx];
+    const sel=st.stAnswers[st.qIdx];
+    const pct=Math.round((st.qIdx/ST_QS.length)*100);
+    root.innerHTML=`
+      <div class="phase-bar">
+        <div class="phase-step done"><div class="ps-num">✓</div>CW診断</div>
+        <div class="phase-step active"><div class="ps-num">2</div>ストック診断</div>
+        <div class="phase-step"><div class="ps-num">3</div>結果</div>
+      </div>
+      <div class="progress-wrap">
+        <div class="progress-row"><span class="progress-label">ストック診断 ${st.qIdx+1} / ${ST_QS.length}</span><span class="progress-pct" style="color:var(--green)">${pct}%</span></div>
+        <div class="progress-track"><div class="progress-fill pf-stock" style="width:${pct}%"></div></div>
+        <div class="step-dots">${phaseDots()}</div>
+      </div>
+      <div class="q-card">
+        <div class="q-section-label">STEP 2 ▸ ストック型マネタイズ診断</div>
+        <span class="q-badge q-badge-stock">Q${q.id}</span>
+        <div class="q-text">${q.text}</div>
+        <div class="q-hint">${q.hint}</div>
+        <div class="options">${q.opts.map((o,i)=>`
+          <button class="opt ${sel&&sel===o?'sel-stock':''}" onclick="selectST(${i})">
+            <span class="opt-letter">${['A','B','C','D'][i]}</span><span>${o.l}</span>
+          </button>`).join('')}
+        </div>
+      </div>
+      <div class="nav-row">
+        <button class="btn-back" onclick="prevST()">← 戻る</button>
+        <button class="btn-next btn-next-stock ${sel?'on':''}" onclick="nextST()">${st.qIdx===ST_QS.length-1?'結果を見る 🎯':'次の質問 →'}</button>
+      </div>`;
+    return;
+  }
+
+  // ── LOADING ──
+  if(st.screen==='loading'){
+    root.innerHTML=`<div class="loading-screen"><div class="loader"></div><h2>あなただけのロードマップを作成中...</h2><p>CW＋ストック型の結果を統合しています</p></div>`;
+    return;
+  }
+
+  // ── RESULT ──
+  if(st.screen==='result'){
+    const cs=st.cwScores, ss=st.stScores;
+    const cwTop=st.cwTop, stTop=st.stTop;
+    const cwG=CW[cwTop[0]], stG=ST[stTop[0]];
+
+    const cwColorCls=['cw1','cw2','cw3','cw4','cw5','cw6','cw7','cw8','cw9'];
+    const stColorCls=['st1','st2','st3','st4','st5','st6','st7'];
+    const cwOrder=['wr','sns','de','img','sl','web','pc','en','co'];
+    const stOrder=['ai','sf','nt','yt','ig','ur','af'];
+
+    const cwBars=cwTop.map((k,i)=>
+      `<div class="score-item ${cwColorCls[i]}"><div class="score-row"><span class="score-label">${CW[k].emoji} ${CW[k].name}</span><span class="score-pct">${cs[k]}%</span></div><div class="score-track"><div class="score-fill" style="width:${cs[k]}%"></div></div></div>`
+    ).join('');
+    const stBars=stTop.map((k,i)=>
+      `<div class="score-item ${stColorCls[i]}"><div class="score-row"><span class="score-label">${ST[k].emoji} ${ST[k].name}</span><span class="score-pct">${ss[k]}%</span></div><div class="score-track"><div class="score-fill" style="width:${ss[k]}%"></div></div></div>`
+    ).join('');
+
+    // Genre TOP3 CW
+    // Q9の回答からExcelレベルを判定
+    const q9ans = st.cwAnswers[8]; // Q9はindex8
+    const excelAdvanced = q9ans && q9ans.excelLevel === 'advanced';
+
+    const cwTop3=cwTop.slice(0,3).map((k,i)=>{
+      const g=CW[k];
+      // PC業務効率化はExcelレベルで案件リストを切り替え
+      const jobList = (k==='pc' && !excelAdvanced && g.jobs) ? g.jobs : (k==='pc' && excelAdvanced && g.jobsAdvanced) ? g.jobsAdvanced : g.jobs;
+      const tagList = (k==='pc' && !excelAdvanced && g.tags) ? g.tags : (k==='pc' && excelAdvanced && g.tagsAdvanced) ? g.tagsAdvanced : g.tags;
+      const jobs=jobList.map(j=>`<div class="tg-job"><span>▸</span><span>${j}</span></div>`).join('');
+      const tags=tagList.map(t=>`<span class="tg-tag">${t}</span>`).join('');
+      const bgs={'wr':'eef2ff','sns':'e3fafc','de':'fff0f6','img':'fff4e6','sl':'f3f0ff','web':'f3f0ff','pc':'fff9db','en':'fff9db','co':'ebfbee'};
+      const bds={'wr':'a5b4fc','sns':'66d9e8','de':'f783ac','img':'ffa94d','sl':'b197fc','web':'b197fc','pc':'ffd43b','en':'ffd43b','co':'69db7c'};
+      return `<div class="genre-card" style="background:#${bgs[k]||'f0f2ff'};border-color:#${bds[k]||'dee2e6'}">
+        <div class="tg-head"><span class="tg-icon">${g.emoji}</span><span class="tg-name">${g.name}</span><span class="tg-rank">#${i+1}</span></div>
+        ${k==='pc'?`<div style="margin-bottom:8px"><span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:100px;${excelAdvanced?'background:#1e3a5f;color:#60a5fa':'background:#1a3320;color:#6ee7b7'}">${excelAdvanced?'⚡ VBA・GAS対応レベル':'📊 Excel関数・データ整理レベル'}</span></div>`:''}
+        <div class="tg-desc">${g.intro}${k==='pc'&&!excelAdvanced?' まずはデータ整理・集計補助から始めて、スキルアップしながら単価を上げていきましょう。':''}</div>
+        <div class="tg-jobs">${jobs}</div>
+        <div class="tg-tags">${tags}</div>
+      </div>`;
+    }).join('');
+
+    // Stock TOP3
+    const stTop3=stTop.slice(0,3).map((k,i)=>{
+      const g=ST[k];
+      const steps=g.howto.map(s=>`<div class="tg-job"><span>▸</span><span>${s}</span></div>`).join('');
+      const bgs2={'ai':'fff4e6','sf':'e3fafc','nt':'ebfbee','yt':'fff5f5','ig':'fff0f6','ur':'f3f0ff','af':'fff9db'};
+      const bds2={'ai':'ffa94d','sf':'66d9e8','nt':'69db7c','yt':'ff6b6b','ig':'f783ac','ur':'b197fc','af':'ffd43b'};
+      return `<div class="genre-card" style="background:#${bgs2[k]||'f0f2ff'};border-color:#${bds2[k]||'dee2e6'}">
+        <div class="tg-head"><span class="tg-icon">${g.emoji}</span><span class="tg-name">${g.name}</span><span class="tg-rank">#${i+1}</span></div>
+        <div class="tg-desc">${g.intro}</div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:8px">プラットフォーム：${g.platform}　|　収益化まで：${g.period}</div>
+        <div class="tg-jobs">${steps}</div>
+      </div>`;
+    }).join('');
+
+    // Schedule
+    const schColors=['3b5bdb','2f9e44','e8590c','6741d9'];
+    const schedule=[
+      {period:'今すぐ〜2週目',title:'基盤を整える',dot:schColors[0],tasks:[
+        `【CW】ランサーズ・クラウドワークスに両方登録してプロフィールを完成させる`,
+        `【CW】${cwG.name}カテゴリで初心者向け案件を10件リストアップする`,
+        `【CW】提案文テンプレートを使って3〜5件応募する`,
+      ]},
+      {period:'2〜4週目',title:'初案件を取りに行く',dot:schColors[1],tasks:[
+        `【CW】週5件応募を目標に継続する（不採用でも次へ）`,
+        `【ストック】${stG.name}の準備を始める（${stG.howto[0]}）`,
+        `【CW】初案件を受注したらヒアリング5問で確認してから着手`,
+      ]},
+      {period:'1〜2ヶ月目',title:'CW 0→2達成を目指す',dot:schColors[2],tasks:[
+        `【CW】2件目を受注してレビューを2件獲得する`,
+        `【ストック】${stG.name}を本格化（${stG.howto[1]}）`,
+        `【CW】継続案件への移行を提案してみる`,
+      ]},
+      {period:'2〜3ヶ月目以降',title:'両方で収入を積み上げる',dot:schColors[3],tasks:[
+        `【CW】月収3万円を目標に単価を少しずつ上げていく`,
+        `【ストック】${stG.name}からの収入が月数千〜1万円になることを目標に`,
+        `両方の実績が揃ったら単価交渉・継続顧問への誘導へ`,
+      ]},
+    ];
+    const schHtml=schedule.map((s,i)=>`
+      <div class="sch-row">
+        <div class="sch-dot" style="background:#${s.dot}">${i+1}</div>
+        <div class="sch-body">
+          <div class="sch-period">${s.period}</div>
+          <div class="sch-title">${s.title}</div>
+          <div class="sch-tasks">${s.tasks.map(t=>`<div class="sch-task">${t}</div>`).join('')}</div>
+        </div>
+      </div>`).join('');
+
+    // Proposal
+    // PC業務効率化はExcelレベルで提案文を切り替え
+    const rawProposal = (cwTop[0]==='pc' && excelAdvanced && cwG.proposalAdvanced) ? cwG.proposalAdvanced : cwG.proposal;
+    const proposalHtml=rawProposal.replace(/\[(.+?)\]/g,'<span class="ph">[$1]</span>');
+    // Prices
+    const priceHtml=cwG.prices.map(p=>`<div class="price-row"><span class="price-phase ${p.p==='初案件'?'ph-first':p.p==='実績あり'?'ph-second':'ph-third'}">${p.p}</span><div><div class="price-val">${p.v}</div><div class="price-note">${p.n}</div></div></div>`).join('');
+
+    // Encouragement
+    const encs=[
+      {q:"応募しても全然採用されない…",a:"初心者の採用率は10〜20%が普通です。「5件応募で1件採用」を目標に。採用されない＝あなたがダメなのではなく条件が合わなかっただけです。"},
+      {q:"実績・ポートフォリオがなくて応募できない…",a:"架空のサンプル作品でもOK！「練習で作りました」と正直に書いた上でサンプルを添付するだけで採用されることはよくあります。"},
+      {q:"ストック型がなかなか売れない…",a:"ストック型は時間がかかるのが普通です。まずCWで収入を確保しながらコツコツ積み上げてください。最初の1件が売れた後は加速します。"},
+    ].map(e=>`<div class="enc-item"><div class="enc-q">Q: ${e.q}</div><div class="enc-a">${e.a}</div></div>`).join('');
+
+    root.innerHTML=`
+      <div class="result-screen">
+        ${(()=>{
+          const cb=analyzeCareer(st.careerText);
+          const hl={wr:'ライティング',sns:'SNS運用',de:'デザイン',img:'画像生成',sl:'スライド資料',web:'Web制作',pc:'PC業務効率化',en:'エンジニアリング',co:'コンサル'};
+          const found=Object.entries(cb).filter(([k,v])=>v>0).map(([k])=>CW[k].emoji+' '+CW[k].name);
+          return found.length>0?`<div style="background:var(--green-l);border:1.5px solid #69db7c;border-radius:11px;padding:10px 14px;font-size:12px;color:var(--green);margin-bottom:12px">
+            ✅ <strong>職歴・経験から検出されたスキル：</strong>${found.join('　')}
+          </div>`:'';
+        })()}
+        <div class="result-hero-wrap">
+          <div class="result-hero rh-cw">
+            <div class="rh-deco"></div>
+            <div class="rh-label">CW ▸ あなたに向いているジャンル</div>
+            <div class="rh-type">${cwG.emoji} ${cwG.name}</div>
+            <div class="rh-genre">${cwG.intro.slice(0,45)}…</div>
+          </div>
+          <div class="result-hero rh-stock">
+            <div class="rh-deco"></div>
+            <div class="rh-label">ストック型 ▸ あなたに向いている手段</div>
+            <div class="rh-type">${stG.emoji} ${stG.name}</div>
+            <div class="rh-genre">${stG.intro.slice(0,45)}…</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">📊 CWジャンル スコア（上位3位）</div>
+          <div class="score-section">${cwBars}</div>
+          <div style="height:1px;background:var(--border);margin:16px 0"></div>
+          <div class="card-title">📦 ストック型スコア（上位3位）</div>
+          <div class="score-section">${stBars}</div>
+        </div>
+
+        <div class="card"><div class="card-title">🎯 おすすめCWジャンル TOP3</div>${cwTop3}</div>
+        <div class="card"><div class="card-title">📦 おすすめストック手段 TOP3</div>${stTop3}</div>
+
+        <div class="card" style="padding-bottom:8px">
+          <div class="tabs">
+            <button class="tab active" data-tab="schedule" onclick="switchTab('schedule')">🗺️ スケジュール</button>
+            <button class="tab" data-tab="proposal" onclick="switchTab('proposal')">📝 提案文</button>
+            <button class="tab" data-tab="price" onclick="switchTab('price')">💴 単価目安</button>
+            <button class="tab" data-tab="checklist" onclick="switchTab('checklist')">✅ チェックリスト</button>
+          </div>
+          <div id="panel-schedule" class="tab-panel">
+            <div style="margin-bottom:12px;padding:10px 14px;background:var(--blue-l);border-radius:9px;font-size:12px;color:var(--text2)">
+              💡 <strong>CW（${cwG.name}）× ストック（${stG.name}）</strong>の並走スケジュールです
+            </div>
+            <div class="schedule-grid">${schHtml}</div>
+          </div>
+          <div id="panel-proposal" class="tab-panel" style="display:none">
+            <div style="margin-bottom:10px;font-size:12px;color:var(--text2)"><strong style="color:var(--navy)">[　]の部分だけ</strong>自分の言葉に変えてそのまま使えます。</div>
+            <div class="template-box">
+              <div class="template-text">${proposalHtml}</div>
+              <button class="copy-btn" id="copy-btn" onclick="copyProposal()">📋 テンプレートをコピー</button>
+            </div>
+          </div>
+          <div id="panel-price" class="tab-panel" style="display:none">
+            <div style="margin-bottom:12px;font-size:12px;color:var(--text2)">最初は単価より<strong style="color:var(--navy)">「1件完走すること」</strong>が最優先。</div>
+            ${priceHtml}
+          </div>
+          <div id="panel-checklist" class="tab-panel" style="display:none">
+            <div id="cl-wrap"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+            <span style="background:var(--blue);color:#fff;font-size:11px;font-weight:700;padding:3px 10px;border-radius:100px">✨ CWアドバイス</span>
+          </div>
+          <div class="ai-box" id="ai-cw-text">分析中...</div>
+        </div>
+
+        <div class="card">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+            <span style="background:var(--green);color:#fff;font-size:11px;font-weight:700;padding:3px 10px;border-radius:100px">✨ ストック型アドバイス</span>
+          </div>
+          <div class="ai-box" style="border-color:#a3d9a5;background:var(--green-l)" id="ai-st-text">分析中...</div>
+        </div>
+
+        <div class="enc-box">
+          <div style="font-size:14px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px">💪 詰まったときのQ&A</div>
+          ${encs}
+        </div>
+
+        <button class="btn-secondary" onclick="restart()">🔄 もう一度診断する</button>
+      </div>`;
+
+    // Start typewriters
+    setTimeout(()=>typewriter(CW_ADVICE[cwTop[0]]||'','ai-cw-text',()=>{
+      setTimeout(()=>typewriter(ST_ADVICE[stTop[0]]||'','ai-st-text'),200);
+    }),300);
+  }
+}
+
+// ════════════════════════════════════════════════════
+// ACTIONS
+// ════════════════════════════════════════════════════
+function startCW(){st.screen='career';render();}
+function startQuizAfterCareer(){st.screen='quiz';st.phase='cw';st.qIdx=0;render();}
+function updateCareerText(v){
+  st.careerText=v;
+  // Show detected keywords
+  const detected=[];
+  const t=v.toLowerCase();
+  const allKw={...CAREER_KEYWORDS};
+  const highlights={wr:'ライティング',sns:'SNS運用',de:'デザイン',img:'画像生成',sl:'スライド資料',web:'Web制作',pc:'PC業務効率化',en:'エンジニアリング',co:'コンサル'};
+  Object.entries(allKw).forEach(([k,words])=>{
+    if(words.some(w=>t.includes(w.toLowerCase()))) detected.push(highlights[k]);
+  });
+  const el=document.getElementById('career-detected');
+  if(el){
+    if(detected.length>0){el.textContent='✅ 検出されたスキル：'+detected.join('・');el.style.display='block';}
+    else{el.style.display='none';}
+  }
+}
+function updateFreeInput(qKey,v){st.freeInputs[qKey]=v;}
+
+function selectCW(i){
+  const opt=CW_QS[st.qIdx].opts[i];
+  st.cwAnswers[st.qIdx]=opt;
+  render();
+  // Q5のその他選択時、既存テキストがあれば復元
+  if(opt.freeInput){
+    setTimeout(()=>{
+      const el=document.getElementById('free-input-q5');
+      if(el&&st.freeInputs.q5) el.value=st.freeInputs.q5;
+    },50);
+  }
+}
+function prevCW(){if(st.qIdx>0){st.qIdx--;render();}}
+function nextCW(){
+  if(!st.cwAnswers[st.qIdx])return;
+  if(st.qIdx<CW_QS.length-1){st.qIdx++;render();}
+  else{st.screen='transition';render();}
+}
+
+function startStock(){st.screen='quiz';st.phase='stock';st.qIdx=0;render();}
+
+function selectST(i){st.stAnswers[st.qIdx]=ST_QS[st.qIdx].opts[i];render();}
+function prevST(){
+  if(st.qIdx>0){st.qIdx--;render();}
+  else{st.screen='transition';render();}
+}
+function nextST(){
+  if(!st.stAnswers[st.qIdx])return;
+  if(st.qIdx<ST_QS.length-1){st.qIdx++;render();}
+  else showResult();
+}
+
+function showResult(){
+  st.screen='loading';render();
+  const cs=calcCW(), ss=calcST();
+  st.cwScores=cs; st.stScores=ss;
+  st.cwTop=topK(cs,9); st.stTop=topK(ss,7);
+  setTimeout(()=>{st.screen='result';render();},1800);
+}
+
+function restart(){
+  st={screen:'intro',phase:'cw',qIdx:0,cwAnswers:[],stAnswers:[],cwScores:null,stScores:null,cwTop:null,stTop:null,aiCwText:'',aiStText:'',aiDone:false,tab:'schedule',checks:{},careerText:'',freeInputs:{},careerBonus:{}};
+  render();
+}
+
+render();
+</script>
+</body>
+</html>
